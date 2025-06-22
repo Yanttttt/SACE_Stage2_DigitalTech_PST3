@@ -173,13 +173,16 @@ plt.legend(title="City", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.savefig('real_median_house_prices_plot.png', dpi=300, bbox_inches='tight')
 
-#--------------------campare with household income-------------------
+#--------------------household income-------------------
 filePath="Equivalised disposable household income at top of selected percentiles, 1994–95 to 2019–20(a).xlsx"
-sheetNameIncome = "Sheet1"
+sheetName = "Sheet1"
 
-dfIncome = pd.read_excel(filePath, sheet_name=sheetNameIncome, skiprows=0, header=1)
+dfIncome = pd.read_excel(filePath, sheet_name=sheetName, skiprows=0, header=1)
 dfIncome.columns = ['Time', 'Percentile 90', 'Percentile 80', 'Median', 'Percentile 20', 'Percentile 10']
 
-print(dfIncome)
+#--------------------House cost-------------------
+filePath="Housing occupancy and costs, Australia, 1994–95 to 2019–20"
+sheetName = "Table 1.1"
+
 
 
