@@ -113,7 +113,7 @@ for city in cityListMedian:
             capitalCPICol[city] = dfCPI.columns[i]
             break
 
-print("CPI Columns:", capitalCPICol);
+#print("CPI Columns:", capitalCPICol);
 
 cpiCols = [cpiTimeCol, nationalCPICol] + list(capitalCPICol.values())
 dfCPISelected = dfCPI[cpiCols].copy()
@@ -137,8 +137,8 @@ plt.savefig('national_real_median_price_plot.png', dpi=300, bbox_inches='tight')
 
 dfCityReal = pd.merge(dfSelectedMedian, dfCPISelected, left_on=timeColMedian, right_on='Time', how='left')
 
-print(dfCPISelected.columns)
-print(dfCityReal.columns)
+#print(dfCPISelected.columns)
+#print(dfCityReal.columns)
 
 for city in cityListMedian:
     cpi_col = 'CPI_' + city
@@ -178,11 +178,64 @@ filePath="Equivalised disposable household income at top of selected percentiles
 sheetName = "Sheet1"
 
 dfIncome = pd.read_excel(filePath, sheet_name=sheetName, skiprows=0, header=1)
-dfIncome.columns = ['Time', 'Percentile 90', 'Percentile 80', 'Median', 'Percentile 20', 'Percentile 10']
+dfIncome.columns = ['Time', 'Percentile 10', 'Percentile 20', 'Median', 'Percentile 80', 'Percentile 90']
+dfIncome['Time'] = pd.to_datetime(dfIncome['Time'].astype(str).str[:4] + '-06', format='%Y-%m')
 
 #--------------------House cost-------------------
-filePath="Housing occupancy and costs, Australia, 1994–95 to 2019–20"
-sheetName = "Table 1.1"
+filePath="Housing occupancy and costs, Australia, 1994–95 to 2019–20 Edited.xlsx"
+sheetName = "Sheet 1"
 
+dfCost = pd.read_excel(filePath, header=None, skiprows=4, nrows=2)
+dfCost=dfCost.T
+
+dfCost.columns = ['Time', 'Cost']
+dfCost['Time'] = pd.to_datetime(dfCost['Time'].astype(str).str[:4] + '-06', format='%Y-%m')
+
+dfMerged = pd.merge(dfIncome, dfCost, on='Time', how='inner')
+#print(dfMerged)
+
+ratio_data = {
+    'Time': dfMerged['Time']
+}
+
+income_columns = ['Percentile 10', 'Percentile 20', 'Median', 'Percentile 80', 'Percentile 90']
+for col in income_columns:
+    ratio_data[col] = dfMerged['Cost'] / dfMerged[col] * 100 
+
+dfRatio = pd.DataFrame(ratio_data)
+
+dfNationalReal[timeColMedian] = pd.to_datetime(dfNationalReal[timeColMedian])
+
+print(dfNationalReal)
+
+dfRatioAndMeanPrice = pd.merge(dfRatio, dfNationalReal[[timeColMedian, 'RealPrice']], left_on='Time', right_on=timeColMedian, how='inner')
+
+dfNationalReal['Time'] = pd.to_datetime(dfNationalReal['Time'], format='%Y-%m')
+
+cutoff = pd.to_datetime('2020-06')
+#dfNationalRealCut = dfNationalReal[dfNationalReal['Time'] <= cutoff]
+
+fig, ax1 = plt.subplots(figsize=(10, 6)) 
+ax1.set_xlim(dfNationalReal['Time'].min(), dfNationalReal['Time'].max())
+
+ax1.set_ylim(29, 40)
+
+ax1.plot(dfRatioAndMeanPrice['Time'], dfRatioAndMeanPrice['Median'], color='firebrick', label='Housing Cost as % of Median Income', linewidth=2)
+ax1.set_ylabel('Cost as % of Median Income', color='firebrick')
+ax1.tick_params(axis='y', labelcolor='firebrick')
+ax1.axhline(y=30, color='gray', linestyle='--', linewidth=1)
+
+
+ax2 = ax1.twinx()
+ax2.plot(dfNationalReal['Time'], dfNationalReal['Australia'], color='darkblue', label='National Real Median House Price', linewidth=2)
+ax2.set_ylabel('Real House Price ($\'000)', color='darkblue')
+ax2.tick_params(axis='y', labelcolor='darkblue')
+
+plt.title('Cost-to-Income Ratio vs National Real Median House Price')
+ax1.set_xlabel('Year')
+plt.xticks(rotation=45)
+plt.grid(True)
+fig.tight_layout()
+plt.savefig('cost_income_vs_real_price.png', dpi=300, bbox_inches='tight')
 
 
