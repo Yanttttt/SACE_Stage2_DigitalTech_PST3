@@ -46,5 +46,16 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 plt.savefig("population_trends.png", dpi=300, bbox_inches='tight')
 
+plt.figure(figsize=(12, 6))
+plt.plot(dfPop['Time'], dfPop['Population'], label='Population', color='blue', linewidth=2)
+plt.title('Australian Population')
+plt.xlabel('Year')
+plt.ylabel('Number of People (Thousands)')
+plt.grid(True)
+plt.legend()
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig("population.png", dpi=300, bbox_inches='tight')
+
 
 

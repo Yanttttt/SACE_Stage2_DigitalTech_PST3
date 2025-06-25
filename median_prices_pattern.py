@@ -1,8 +1,6 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import linregress
-
 
 filePath = "Median price and number of transfers (capital city and rest of state).xlsx"
 sheetNameMedian = "Data1"
@@ -220,53 +218,26 @@ plt.savefig('price_vs_population_change.png', dpi=300)
 
 #---------------- Scatter --------------
 
-max_lag = 12
-r2_results = []
+dfLagged = dfCombined.copy()
 
-for lag in range(max_lag + 1):
-    dfTemp = dfCombined.copy()
-    dfTemp[f'Pop_Lag_{lag}'] = dfTemp['Population_QoQ_Change'].shift(lag)
-    dfTemp = dfTemp.dropna(subset=[f'Pop_Lag_{lag}', 'RealPrice_QoQ_Change'])
-    
-    X = dfTemp[f'Pop_Lag_{lag}'].values
-    y = dfTemp['RealPrice_QoQ_Change'].values
-    
-    slope, intercept, r_value, p_value, std_err = linregress(X, y)
-    r2 = r_value**2
-    r2_results.append((lag, r2))
+dfLagged['Population_Lagged'] = dfLagged['Population_QoQ_Change'].shift(-4)
 
-dfR2 = pd.DataFrame(r2_results, columns=['Lag', 'R2'])
+# 去除有缺失值的行
+dfLagged = dfLagged.dropna(subset=['Population_Lagged', 'RealPrice_QoQ_Change'])
 
-best_lag = dfR2.loc[dfR2['R2'].idxmax(), 'Lag']
-best_r2 = dfR2['R2'].max()
-print(f'最合适的滞后期是：{int(best_lag)} 季度，对应 R^2 = {best_r2:.3f}')
-
-# 画滞后 vs R2 折线图
-plt.figure(figsize=(10, 5))
-plt.plot(dfR2['Lag'], dfR2['R2'], marker='o')
-plt.title('R^2 vs Lag of Population Change')
-plt.xlabel('Lag (Quarters)')
-plt.ylabel('R^2 between Population Lag and House Price Change')
+# 绘制散点图
+plt.figure(figsize=(10, 6))
+sns.regplot(
+    data=dfLagged,
+    x='Population_Lagged',
+    y='RealPrice_QoQ_Change',
+    scatter_kws={'alpha': 0.7},
+    line_kws={'color': 'red'}
+)
+plt.title('Lagged Population Change (6 Quarters) vs Real House Price Change')
+plt.xlabel('Population Change (6 Quarters Ago)')
+plt.ylabel('Real House Price Change ($)')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('optimal_lag_r2_plot.png', dpi=300)
+plt.savefig('scatter_lagged_population_vs_price.png', dpi=300)
 
-# 画最佳滞后散点图和回归线
-dfBest = dfCombined.copy()
-dfBest['Pop_Lag'] = dfBest['Population_QoQ_Change'].shift(int(best_lag))
-dfBest = dfBest.dropna(subset=['Pop_Lag', 'RealPrice_QoQ_Change'])
-
-X_best = dfBest['Pop_Lag'].values
-y_best = dfBest['RealPrice_QoQ_Change'].values
-slope, intercept, r_value, p_value, std_err = linregress(X_best, y_best)
-
-plt.figure(figsize=(8, 6))
-plt.scatter(X_best, y_best, alpha=0.7, label='Data points')
-plt.plot(X_best, intercept + slope * X_best, color='red', label=f'Fit line: y={slope:.2f}x+{intercept:.2f}')
-plt.title(f'Scatter Plot of Population Change Lagged by {best_lag} Quarters vs House Price Change')
-plt.xlabel(f'Population QoQ Change Lagged by {best_lag} Quarters')
-plt.ylabel('Real House Price QoQ Change')
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig('scatter_best_lag.png', dpi=300)
