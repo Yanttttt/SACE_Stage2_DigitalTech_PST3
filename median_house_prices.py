@@ -239,3 +239,4 @@ fig.tight_layout()
 plt.savefig('cost_income_vs_real_price.png', dpi=300, bbox_inches='tight')
 
 
+
