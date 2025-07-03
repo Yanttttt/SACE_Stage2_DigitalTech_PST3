@@ -45,17 +45,36 @@ dfApproved['Time'] = dfApproved['Time'] + pd.DateOffset(months=12)
 
 # ---- Step 4: 合并并计算差值 ----
 dfCombined = pd.merge(dfLoan, dfApproved, on='Time', how='inner')
-dfCombined['Diff'] = dfCombined['LoanNumber'] - dfCombined['Number']
+dfCombined['Diff'] = dfCombined['Number'] - dfCombined['LoanNumber']
 
 print(dfCombined[['Time', 'LoanNumber', 'Number', 'Diff']].tail())
 
 # ---- Step 5: 绘图 ----
 plt.figure(figsize=(12, 6))
-plt.bar(dfCombined['Time'], dfCombined['Diff'], width=20, color='teal')
+positive = dfCombined[dfCombined['Diff'] >= 0]
+negative = dfCombined[dfCombined['Diff'] < 0]
+
+plt.bar(positive['Time'], positive['Diff'], width=20, color='green', label='Loan > Approval')
+plt.bar(negative['Time'], negative['Diff'], width=20, color='red', label='Loan < Approval')
+
 plt.xlabel('Time')
-plt.ylabel('Loan - Lagged Approval')
-plt.title('Difference between Loan Numbers and Lagged Dwelling Approvals')
+plt.ylabel('Lagged Approval - Loan')
+plt.title('Difference between Lagged Dwelling Approvals (1 Year) and Loan Numbers')
 plt.grid(True, axis='y')
 plt.tight_layout()
 plt.xticks(rotation=45)
 plt.savefig("loan_minus_lagged_approval.png", dpi=300, bbox_inches='tight')
+
+dfCombined['CumulativeDiff'] = dfCombined['Diff'].cumsum()
+
+# 绘制累积差值折线图
+plt.figure(figsize=(12, 6))
+plt.plot(dfCombined['Time'], dfCombined['CumulativeDiff'], color='purple', label='Cumulative Difference')
+plt.xlabel('Time')
+plt.ylabel('Cumulative Approval - Loan')
+plt.title('Cumulative Difference: Lagged Approvals - Loan Numbers')
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.xticks(rotation=45)
+plt.savefig("cumulative_diff_line.png", dpi=300, bbox_inches='tight')
