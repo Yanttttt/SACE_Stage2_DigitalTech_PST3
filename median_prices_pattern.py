@@ -116,7 +116,6 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig('national_yoy_growth_pct.png', dpi=300)
 
-# 转换时间格式
 dfCityGrowth = dfRealCityOnly.copy()
 dfCityGrowth[timeColMedian] = pd.to_datetime(dfCityGrowth[timeColMedian])
 dfCityGrowth = dfCityGrowth.sort_values(timeColMedian)
@@ -148,11 +147,11 @@ dfHeatmap = dfHeatmap[cityListMedianSort]
 
 plt.figure(figsize=(14, 8))
 sns.heatmap(
-    dfHeatmap.T,  # 转置使城市为 y 轴，时间为 x 轴
-    cmap='coolwarm',  # 蓝到红配色
-    center=0,         # 使 0 为中性色（白）
-    annot=False,      # 如需显示数字可设为 True
-    fmt=".1f",        # 数字格式
+    dfHeatmap.T,
+    cmap='coolwarm',  
+    center=0,        
+    annot=False,     
+    fmt=".1f",        
     cbar_kws={'label': 'YoY Growth (%)'}
 )
 
@@ -220,7 +219,7 @@ plt.savefig('price_vs_population_change.png', dpi=300)
 
 dfLagged = dfCombined.copy()
 
-dfLagged['Population_Lagged'] = dfLagged['Population_QoQ_Change'].shift(-4)
+dfLagged['Population_Lagged'] = dfLagged['Population_QoQ_Change'].shift(4)
 
 # 去除有缺失值的行
 dfLagged = dfLagged.dropna(subset=['Population_Lagged', 'RealPrice_QoQ_Change'])
@@ -234,8 +233,8 @@ sns.regplot(
     scatter_kws={'alpha': 0.7},
     line_kws={'color': 'red'}
 )
-plt.title('Lagged Population Change (6 Quarters) vs Real House Price Change')
-plt.xlabel('Population Change (6 Quarters Ago)')
+plt.title('Lagged Population Change (4 Quarters) vs Real House Price Change')
+plt.xlabel('Population Change (4 Quarters Ago)')
 plt.ylabel('Real House Price Change ($)')
 plt.grid(True)
 plt.tight_layout()

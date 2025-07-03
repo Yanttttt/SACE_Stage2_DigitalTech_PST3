@@ -1,6 +1,8 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import linregress
+import numpy as np
 
 filePath = "Median price and number of transfers (capital city and rest of state).xlsx"
 sheetNameMedian = "Data1"
@@ -238,5 +240,39 @@ plt.grid(True)
 fig.tight_layout()
 plt.savefig('cost_income_vs_real_price.png', dpi=300, bbox_inches='tight')
 
+#------------------- linear regression -------------------
+
+dfIncomeVsPrice = dfRatioAndMeanPrice.dropna(subset=['Median', 'RealPrice'])
+
+# 执行线性回归
+x = dfIncomeVsPrice['Median'].astype(float)
+y = dfIncomeVsPrice['RealPrice'].astype(float)
+
+mask = x.notna() & y.notna()
+x = x[mask]
+y = y[mask]
+
+slope, intercept, r_value, p_value, std_err = linregress(x, y)
+
+# 打印拟合结果
+print(f'线性拟合结果: RealPrice = {slope:.2f} * Income + {intercept:.2f}, R² = {r_value**2:.3f}')
+
+# 绘图
+plt.figure(figsize=(8, 6))
+plt.scatter(dfIncomeVsPrice['Median'], dfIncomeVsPrice['RealPrice'], alpha=0.7, label='Data', color='purple')
+
+# 拟合线
+x = np.linspace(dfIncomeVsPrice['Median'].min(), dfIncomeVsPrice['Median'].max(), 100)
+y = slope * x + intercept
+plt.plot(x, y, color='black', label=f'Fit: y = {slope:.2f}x + {intercept:.2f}')
+
+# 图表设置
+plt.title(f'CPI-adjusted Real House Price vs Median Household Income\n$R^2$ = {r_value**2:.3f}')
+plt.xlabel('Median Household Income ($ per week)')
+plt.ylabel('Real House Price ($\'000)')
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.savefig('scatter_income_vs_real_price.png', dpi=300, bbox_inches='tight')
 
 
